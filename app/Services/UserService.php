@@ -5,80 +5,94 @@ namespace App\Services;
 use App\Mail\EmailVerificationMail;
 use App\Models\EmailVerification;
 use App\Models\User;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Exception;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class UserService
 {
+    /**
+     * تسجيل مواطن جديد وتوليد رمز التحقق.
+     */
     public function register(array $data)
     {
-        // إنشاء المستخدم
-        $user = User::create([
-            'first_name' => $data['first_name'],
-            'last_name'  => $data['last_name'],
-            'email'      => $data['email'],
-            'phone'      => $data['phone'],
-            'national_id'=> $data['national_id'],
-            'password'   => bcrypt($data['password']),
-        ]);
+        DB::beginTransaction();
+        try {
+            // 1. إنشاء المستخدم
+            $user = User::create([
+                'first_name' => $data['first_name'],
+                'last_name' => $data['last_name'],
+                'email' => $data['email'],
+                'phone' => $data['phone'],
+                'national_id' => $data['national_id'],
+                'password' => Hash::make($data['password']), // استخدام Hash::make أفضل من bcrypt
+            ]);
 
-        $user->assignRole('citizen');
+            $user->assignRole('citizen');
 
-        // توليد رمز تحقق عشوائي
-        $verificationCode = rand(100000, 999999);
+            // 2. توليد وحفظ رمز التحقق (OTP)
+            $verificationCode = random_int(100000, 999999);
 
-        // حفظ رمز التحقق في جدول email_verifications
-        EmailVerification::create([
-            'email' => $user->email,
-            'code' => $verificationCode,
-            'expires_at' => now()->addMinutes(10),
-        ]);
+            EmailVerification::create([
+                'user_id' => $user->id,
+                'code' => (string) $verificationCode,
+                'expires_at' => now()->addMinutes(10), // رمز التحقق صالح لمدة 10 دقائق
+            ]);
 
-        // إرسال الايميل
-        Mail::to($user->email)->send(new EmailVerificationMail($verificationCode));
+            // 3. إرسال الإيميل (يجب أن يكون لديك الكلاس App\Mail\EmailVerificationMail جاهزاً)
+            Mail::to($user->email)->send(new EmailVerificationMail($verificationCode));
 
-        // إعادة البيانات للكنترولر
-        return [
-            'user' => $user->load('roles'),
-            'verification_code' => $verificationCode,
-        ];
+            DB::commit();
+
+            return [
+                'user_id' => $user->id,
+                'message' => 'Registration successful. Verification code sent to email.'
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            // يمكنك تسجيل الخطأ هنا
+            throw new Exception('Registration failed: ' . $e->getMessage());
+        }
     }
 
-
-
-
-
-    // تابع لتأكيد البريد الإلكتروني
-    public function verifyEmail(EmailVerificationRequest $request)
+    /**
+     * التحقق من البريد الإلكتروني باستخدام الرمز (OTP).
+     * @param int $userId معرف المستخدم الذي يحاول التحقق
+     * @param string $code رمز التحقق المرسل
+     * @return User|null المستخدم بعد التحقق
+     */
+    public function verifyEmail(int $userId, string $code)
     {
-        $verification = EmailVerification::where('email', $request->email)
-            ->where('code', $request->code)
-            ->first();
+        DB::beginTransaction();
+        try {
+            // 1. البحث عن رمز التحقق النشط المرتبط بهذا المستخدم
+            $verification = EmailVerification::where('user_id', $userId)
+                ->where('code', $code)
+                ->where('expires_at', '>', now())
+                ->first();
 
-        if (!$verification) {
-            return response()->json([
-                'message' => 'Invalid verification code.'
-            ], 400);
+            if (!$verification) {
+                DB::rollBack();
+                return null; // رمز غير صالح أو منتهي الصلاحية
+            }
+
+            // 2. تحديث المستخدم كـ verified
+            $user = $verification->user;
+            $user->email_verified_at = now();
+            $user->save();
+
+            // 3. حذف رمز التحقق
+            $verification->delete();
+
+            DB::commit();
+            return $user->load('roles');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            // يمكنك تسجيل الخطأ هنا
+            throw new Exception('Email verification failed.');
         }
-
-        if ($verification->expires_at < now()) {
-            return response()->json([
-                'message' => 'Verification code has expired.'
-            ], 400);
-        }
-
-        // تفعيل المستخدم
-        $user = User::where('email', $request->email)->first();
-        $user->email_verified_at = now();
-        $user->save();
-
-        // حذف رمز التحقق بعد الاستخدام
-        $verification->delete();
-
-        return response()->json([
-            'message' => 'Email verified successfully.',
-            'user' => $user
-        ]);
     }
-
 }

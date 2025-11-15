@@ -20,13 +20,24 @@ class RoleAndPermissionSeeder extends Seeder
 
 
         Role::firstOrCreate(['name' => 'citizen']);
+
         //create roles
        // $adminRole = Role::create(['name' => 'admin']);
       //  $pationRole = Role::create(['name' => 'pation']);
        // $citizenRole = Role::create(['name' => 'citizen']);
      //   $secertarieRole = Role::create(['name' => 'secrtary']);
 
+        // 2. إنشاء الدور
+       // $citizenRole = Role::firstOrCreate(['name' => 'citizen']);
+        // 1. إنشاء الأدوار
+        $citizenRole = Role::firstOrCreate(['name' => 'citizen']);
 
+        // 2. إنشاء الصلاحيات الجديدة
+        $submitComplaintPermission = Permission::firstOrCreate(['name' => 'submit complaint']);
+
+        // 3. تعيين الصلاحيات للأدوار
+        $citizenRole->givePermissionTo($submitComplaintPermission);
+    }
         //define permission
 //        $permissions = [
 //            'add appointment','updateappointment','deleteappointment','indexappointment'
@@ -54,6 +65,6 @@ class RoleAndPermissionSeeder extends Seeder
 //
 
 
-    }
+
 }
 

@@ -13,8 +13,8 @@ class EmailVerificationRequest extends FormRequest
 
     public function rules(): array
     {
+        // تم حذف التحقق من 'user_id' لأنه أصبح يأتي من المسار
         return [
-            'email' => 'required|email|exists:users,email',
             'code'  => 'required|digits:6',
         ];
     }
