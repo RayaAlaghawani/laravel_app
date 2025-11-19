@@ -3,7 +3,10 @@
 namespace App\Services;
 
 use App\Models\Complaint;
+<<<<<<< HEAD
 use Illuminate\Support\Facades\Auth;
+=======
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
@@ -15,7 +18,10 @@ class ComplaintService
     {
         DB::beginTransaction();
         $attachmentPath = null;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
         try {
 
             if ($attachment) {
@@ -25,7 +31,11 @@ class ComplaintService
 
             $complaint = Complaint::create([
                 'user_id' => $userId,
+<<<<<<< HEAD
                 'government_agencie_id' => $data['government_agencie_id'],
+=======
+                'department' => $data['department'],
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
                 'title' => $data['title'],
                 'description' => $data['description'],
                 'attachment_path' => $attachmentPath,

@@ -39,6 +39,11 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
     public function emailVerifications()
     {
         return $this->hasMany(EmailVerification::class);
@@ -48,5 +53,8 @@ class User extends Authenticatable
     {
         return $this->hasMany(Complaint::class);
     }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
 }

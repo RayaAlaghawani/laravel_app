@@ -20,7 +20,7 @@ class CitizenAuthController extends Controller
     }
 
     /**
-     * Register a new citizen and send email verification
+     * تسجيل مواطن جديد وإرسال رمز التحقق
      */
     public function login(AuthadminRequest $request )
     {
@@ -53,9 +53,19 @@ class CitizenAuthController extends Controller
     public function register(CitizenRegisterRequest $request)
     {
         try {
+<<<<<<< HEAD
             $result = $this->userService->register($request->validated());
             return response()->json([
                 'message' => 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+=======
+            // استدعاء Service لتسجيل المستخدم
+            $result = $this->userService->register($request->validated());
+
+            // إرجاع JSON response (لا نُرجع رمز التحقق لبيئة الإنتاج، تم إزالته)
+            return response()->json([
+                'message' => 'تم التسجيل بنجاح. يرجى التحقق من بريدك الإلكتروني.',
+                // نُرجع المعرف لمساعدة المستخدم على متابعة التحقق باستخدام المسار الجديد
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
                 'user_id' => $result['user_id'],
             ], 201);
         } catch (\Exception $e) {
@@ -64,6 +74,35 @@ class CitizenAuthController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+<<<<<<< HEAD
+=======
+    }
+
+    /**
+     * التحقق من البريد الإلكتروني باستخدام الرمز المرسل
+     * @param EmailVerificationRequest $request طلب التحقق (يحتوي فقط على 'code')
+     * @param int $userId معرف المستخدم المُمرر في المسار
+     */
+    // تم التعديل هنا: إضافة $userId كمعامل
+    public function verifyEmail(EmailVerificationRequest $request, int $userId)
+    {
+        // تم التعديل هنا: $userId يأتي من الـ URL وليس من جسم الطلب
+        $code = $request->input('code');
+
+        // نرسل الـ userId مباشرة إلى الخدمة
+        $user = $this->userService->verifyEmail($userId, $code);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'رمز التحقق غير صالح أو انتهت صلاحيته.',
+            ], 400);
+        }
+
+        return response()->json([
+            'message' => 'تم تأكيد البريد الإلكتروني بنجاح.',
+            'user' => $user
+        ], 200);
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
     }
 
     public function verifyEmail(EmailVerificationRequest $request, int $userId)

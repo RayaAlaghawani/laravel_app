@@ -18,7 +18,11 @@ return new class extends Migration
 
             // إضافة مفتاح فريد لـ user_id لتجنب رموز تحقق متعددة لنفس المستخدم
             $table->unique(['user_id', 'code']);
+<<<<<<< HEAD
             $table->foreign('user_id')->nullable()->references('id')->on('users')->onDelete('cascade');
+=======
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+>>>>>>> 1718eb7ba15695ab7a4044b614f739c7b2f46d69
         });
     }
 
