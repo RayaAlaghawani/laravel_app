@@ -39,13 +39,13 @@ class AuthadminRequest extends FormRequest
      * @param int $code
      * @return void
      */
-    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+protected function failedValidation(Validator $validator)
     {
         throw new \Illuminate\Http\Exceptions\HttpResponseException(
             ResponseHelper::Validate(
+                $validator->errors()->toArray(),
                 'Validation error.',
-                422,
-                $validator->errors()->toArray()
+                422
             )
         );
     }

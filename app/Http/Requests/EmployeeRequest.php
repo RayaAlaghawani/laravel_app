@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Helpers\ResponseHelper;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class EmployeeRequest extends FormRequest
@@ -12,7 +13,9 @@ class EmployeeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true; // مهم جداً حتى يسمح بتمرير الطلب
+        return true;
+
+
     }
 
     /**
@@ -27,34 +30,31 @@ class EmployeeRequest extends FormRequest
 
             'government_agencie_id' => 'required|exists:government_agencies,id',
 
-            // رقم الجوال: يبدأ بـ 09 وطوله 10 أرقام
             'phone' => [
                 'required',
                 'regex:/^09\d{8}$/',
                 'unique:users,phone',
             ],
 
-            // الرقم الوطني: أرقام فقط
-            'National_Identifier' => [
+            'national_id' => [
                 'required',
                 'digits_between:1,50',
                 'regex:/^[0-9]+$/',
-                'unique:users,National_Identifier',
+                'unique:users,national_id',
             ],
 
             'permissions'   => 'array',
             'permissions.*' => 'required|string|exists:permissions,name',
         ];
     }
-    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator)
+    protected function failedValidation(Validator $validator)
     {
         throw new \Illuminate\Http\Exceptions\HttpResponseException(
             ResponseHelper::Validate(
+                $validator->errors()->toArray(),
                 'Validation error.',
-                422,
-                $validator->errors()->toArray()
+                422
             )
         );
     }
-
 }

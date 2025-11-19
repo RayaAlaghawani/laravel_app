@@ -20,7 +20,6 @@ class government_agencies extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
-
             [
                 'name' => 'Ministry of Education',
                 'type' => 'Ministry',
